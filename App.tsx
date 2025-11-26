@@ -1,20 +1,41 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { View, Button, ActivityIndicator } from 'react-native';
 import { JitsiMeeting } from '@jitsi/react-native-sdk';
 
 interface IMeetingData {
   room_name: string;
   jitsi_domain: string;
+  onReadyToClose?: () => void;
+  settings: {
+    startWithAudioMuted: boolean;
+    startWithVideoMuted: boolean;
+    startAudioOnly: boolean;
+
+  }
 }
 
 
 export default function App() {
   const [meetingData, setMeetingData] = useState<IMeetingData | null>(null);
+  const [buttonFired, setButtonFired] = useState(false);
+  const jitsiMeeting = useRef(null);
+
+  const toggleButton = () => {
+    setButtonFired(!buttonFired);
+  };
+
+
+  useEffect(() => {
+    const fireRequest = async () => {
+      await requestCall();
+    }
+    fireRequest();
+  }, [buttonFired])
 
   const requestCall = async () => {
     try {
       const response = await fetch(
-        'https://46634d54ca17.ngrok-free.app/api/meetings',
+        'https://ebf4d9cd565b.ngrok-free.app/api/meetings',
         {
           method: 'POST',
           headers: {
@@ -24,41 +45,31 @@ export default function App() {
       );
       const data = await response.json();
       console.log(data);
-      setMeetingData(data);
+      setMeetingData({ ...data, settings: { startWithAudioMuted: false, startWithVideoMuted: false, startAudioOnly: false } });
     } catch (err) {
       console.error(err);
     }
   };
-  if (meetingData) {
-    console.log("firinggg");
 
-    return (
-      <View style={{ flex: 1 }}>
-        <JitsiMeeting
+  /*<JitsiMeeting
+          flags={{ 'call-integration.enabled': true } as any}
           room={meetingData.room_name}
           serverURL={meetingData.jitsi_domain}
-          userInfo={{
-            displayName: 'Test User',
-            avatarURL: 'https://example.com/avatar.jpg',
-            email: 'test@example.com',
-          }}
+          config={meetingData.settings}
+          ref={jitsiMeeting}
           style={{ flex: 1 }}
-        />
-      </View>
-    )
-  }
+        />*/
 
+  /*
+    */
   return (
     <>
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Button title="Request Call" onPress={requestCall} />
+        <Button title="Request Call" onPress={toggleButton} />
       </View>
-      {/*
-        meetingData && (<>
 
-          
-        </>)
-      */}
+
+
     </>
   );
 }
